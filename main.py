@@ -1,7 +1,6 @@
 ﻿import click
 import json
 from rich.console import Console
-from rich.table import Table
 from src.analyzer import analyze_password
 from src.display import display_result
 from src.generator import generate_password, generate_passphrase
