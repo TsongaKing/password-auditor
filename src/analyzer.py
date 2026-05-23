@@ -50,6 +50,10 @@ def detect_patterns(password: str) -> list:
     return patterns
 
 
+def is_passphrase(password: str) -> bool:
+    return ' ' in password or password.count('-') >= 2
+
+
 def analyze_password(password: str, check_breach: bool = True) -> dict:
     result = zxcvbn(password)
 
