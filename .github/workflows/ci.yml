@@ -1,0 +1,42 @@
+﻿name: CI - Password Auditor
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Lint with flake8
+        run: |
+          pip install flake8
+          flake8 main.py src/analyzer.py src/display.py --max-line-length=120 --ignore=E501,W503
+
+      - name: Test password analysis
+        run: |
+          python -c "
+          from src.analyzer import analyze_password, detect_patterns
+          r = analyze_password('password123', check_breach=False)
+          assert r['score'] == 0, 'password123 should be very weak'
+          assert 'word_plus_numbers' in r['patterns_detected']
+          r2 = analyze_password('Tr0ub4dor3Lamp', check_breach=False)
+          assert r2['score'] >= 3, 'Strong password should score 3+'
+          assert detect_patterns('qwerty123') != []
+          assert detect_patterns('Tr0ub4dor3Lamp') == []
+          print('All tests passed!')
+          "
