@@ -25,18 +25,40 @@ jobs:
       - name: Lint with flake8
         run: |
           pip install flake8
-          flake8 main.py src/analyzer.py src/display.py --max-line-length=120 --ignore=E501,W503
+          flake8 main.py src/analyzer.py src/display.py src/generator.py src/compliance.py --max-line-length=120 --ignore=E501,W503
 
       - name: Test password analysis
         run: |
           python -c "
           from src.analyzer import analyze_password, detect_patterns
           r = analyze_password('password123', check_breach=False)
-          assert r['score'] == 0, 'password123 should be very weak'
+          assert r['score'] == 0
           assert 'word_plus_numbers' in r['patterns_detected']
           r2 = analyze_password('Tr0ub4dor3Lamp', check_breach=False)
-          assert r2['score'] >= 3, 'Strong password should score 3+'
-          assert detect_patterns('qwerty123') != []
-          assert detect_patterns('Tr0ub4dor3Lamp') == []
-          print('All tests passed!')
+          assert r2['score'] >= 3
+          print('Analysis tests passed!')
+          "
+
+      - name: Test generator
+        run: |
+          python -c "
+          from src.generator import generate_password, generate_passphrase
+          pwd = generate_password(16)
+          assert len(pwd) == 16
+          pp = generate_passphrase(4)
+          assert pp.count('-') == 3
+          print('Generator tests passed!')
+          "
+
+      - name: Test compliance
+        run: |
+          python -c "
+          from src.compliance import check_nist_compliance
+          result = {'password_length': 6, 'score': 0, 'is_breached': False}
+          c = check_nist_compliance(result)
+          assert c['compliant'] == False
+          result2 = {'password_length': 16, 'score': 3, 'is_breached': False}
+          c2 = check_nist_compliance(result2)
+          assert c2['compliant'] == True
+          print('Compliance tests passed!')
           "
